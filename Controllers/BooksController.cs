@@ -41,6 +41,31 @@ namespace BookLibraryAPI.Controllers
         {
             var query = _context.Books.AsQueryable();
 
+            query = ApplyFilters(query, parameters);
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)parameters.PageSize);
+
+            var books = await query
+                .OrderBy(parameters.SortBy)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var response = new
+            {
+                TotalItems = totalItems,
+                parameters.PageNumber,
+                parameters.PageSize,
+                TotalPages = totalPages,
+                Items = books
+            };
+
+            return Ok(response);
+        }
+
+        private IQueryable<Book> ApplyFilters(IQueryable<Book> query, SearchBooksParameters parameters)
+        {
             if (!string.IsNullOrEmpty(parameters.Title))
             {
                 query = query.Where(b => b.Title.Contains(parameters.Title));
@@ -82,25 +107,7 @@ namespace BookLibraryAPI.Controllers
                 query = query.Where(b => b.Rating <= parameters.MaxRating.Value);
             }
 
-            var totalItems = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalItems / (double)parameters.PageSize);
-
-            var books = await query
-                .OrderBy(parameters.SortBy)
-                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-                .Take(parameters.PageSize)
-                .ToListAsync();
-
-            var response = new
-            {
-                TotalItems = totalItems,
-                PageNumber = parameters.PageNumber,
-                PageSize = parameters.PageSize,
-                TotalPages = totalPages,
-                Items = books
-            };
-
-            return Ok(response);
+            return query;
         }
 
         [HttpPost]
