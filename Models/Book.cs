@@ -8,5 +8,6 @@
         public string Author { get; set; } = string.Empty;
         public string Genre { get; set; } = string.Empty;
         public bool IsBorrowed { get; set; }
+        public DateTime PublicationDate { get; set; }
     }
 }
