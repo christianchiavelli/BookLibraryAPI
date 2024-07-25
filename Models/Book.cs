@@ -9,5 +9,7 @@
         public string Genre { get; set; } = string.Empty;
         public bool IsBorrowed { get; set; }
         public DateTime PublicationDate { get; set; }
+        public decimal Price { get; set; }
+        public double Rating { get; set; }
     }
 }

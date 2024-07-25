@@ -1,5 +1,6 @@
 ﻿using BookLibraryAPI.Data;
 using BookLibraryAPI.Models;
+using BookLibraryAPI.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
@@ -17,7 +18,6 @@ namespace BookLibraryAPI.Controllers
             _context = context;
         }
 
-        // Listagem e Busca
         [HttpGet]
         public async Task<IActionResult> GetBooks()
         {
@@ -37,59 +37,65 @@ namespace BookLibraryAPI.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchBooks(
-            string title = "",
-            string description = "",
-            string author = "",
-            string genre = "",
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            bool? isBorrowed = null,
-            string sortBy = "Title",
-            int pageNumber = 1,
-            int pageSize = 10)
+        public async Task<IActionResult> SearchBooks([FromQuery] SearchBooksParameters parameters)
         {
             var query = _context.Books.AsQueryable();
 
-            if (!string.IsNullOrEmpty(title))
+            if (!string.IsNullOrEmpty(parameters.Title))
             {
-                query = query.Where(b => b.Title.Contains(title));
+                query = query.Where(b => b.Title.Contains(parameters.Title));
             }
-            if (!string.IsNullOrEmpty(description))
+            if (!string.IsNullOrEmpty(parameters.Description))
             {
-                query = query.Where(b => b.Description.Contains(description));
+                query = query.Where(b => b.Description.Contains(parameters.Description));
             }
-            if (!string.IsNullOrEmpty(author))
+            if (!string.IsNullOrEmpty(parameters.Author))
             {
-                query = query.Where(b => b.Author.Contains(author));
+                query = query.Where(b => b.Author.Contains(parameters.Author));
             }
-            if (!string.IsNullOrEmpty(genre))
+            if (!string.IsNullOrEmpty(parameters.Genre))
             {
-                query = query.Where(b => b.Genre.Contains(genre));
+                query = query.Where(b => b.Genre.Contains(parameters.Genre));
             }
-            if (startDate.HasValue && endDate.HasValue)
+            if (parameters.StartDate.HasValue && parameters.EndDate.HasValue)
             {
-                query = query.Where(b => b.PublicationDate >= startDate && b.PublicationDate <= endDate);
+                query = query.Where(b => b.PublicationDate >= parameters.StartDate && b.PublicationDate <= parameters.EndDate);
             }
-            if (isBorrowed.HasValue)
+            if (parameters.IsBorrowed.HasValue)
             {
-                query = query.Where(b => b.IsBorrowed == isBorrowed.Value);
+                query = query.Where(b => b.IsBorrowed == parameters.IsBorrowed.Value);
+            }
+            if (parameters.MinPrice.HasValue)
+            {
+                query = query.Where(b => b.Price >= parameters.MinPrice.Value);
+            }
+            if (parameters.MaxPrice.HasValue)
+            {
+                query = query.Where(b => b.Price <= parameters.MaxPrice.Value);
+            }
+            if (parameters.MinRating.HasValue)
+            {
+                query = query.Where(b => b.Rating >= parameters.MinRating.Value);
+            }
+            if (parameters.MaxRating.HasValue)
+            {
+                query = query.Where(b => b.Rating <= parameters.MaxRating.Value);
             }
 
             var totalItems = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            var totalPages = (int)Math.Ceiling(totalItems / (double)parameters.PageSize);
 
             var books = await query
-                .OrderBy(sortBy)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
+                .OrderBy(parameters.SortBy)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
                 .ToListAsync();
 
             var response = new
             {
                 TotalItems = totalItems,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
+                PageNumber = parameters.PageNumber,
+                PageSize = parameters.PageSize,
                 TotalPages = totalPages,
                 Items = books
             };
@@ -97,7 +103,6 @@ namespace BookLibraryAPI.Controllers
             return Ok(response);
         }
 
-        // Criação
         [HttpPost]
         public async Task<IActionResult> CreateBook(Book book)
         {
@@ -106,7 +111,6 @@ namespace BookLibraryAPI.Controllers
             return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
         }
 
-        // Atualização
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBook(int id, Book updatedBook)
         {
@@ -124,7 +128,6 @@ namespace BookLibraryAPI.Controllers
             return NoContent();
         }
 
-        // Exclusão
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
