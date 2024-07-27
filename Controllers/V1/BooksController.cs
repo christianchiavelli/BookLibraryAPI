@@ -2,6 +2,7 @@
 using BookLibraryAPI.Data;
 using BookLibraryAPI.Models;
 using BookLibraryAPI.Parameters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
@@ -11,13 +12,15 @@ namespace BookLibraryAPI.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    public class BooksController : ControllerBase
+    public class BooksController(ApplicationDbContext context) : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context = context;
 
-        public BooksController(ApplicationDbContext context)
+        [HttpGet("protected")]
+        [Authorize]
+        public IActionResult GetProtected()
         {
-            _context = context;
+            return Ok("This is a protected endpoint!");
         }
 
         /// <summary>

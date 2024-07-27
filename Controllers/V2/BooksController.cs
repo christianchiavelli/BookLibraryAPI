@@ -11,14 +11,9 @@ namespace BookLibraryAPI.Controllers.V2
     [ApiController]
     [ApiVersion(2.0, Deprecated = true)]
     [Route("api/v{version:apiVersion}/[controller]")]
-    public class BooksController : ControllerBase
+    public class BooksController(ApplicationDbContext context) : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-
-        public BooksController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ApplicationDbContext _context = context;
 
         /// <summary>
         /// Retrieves a list of all books.
