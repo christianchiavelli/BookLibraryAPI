@@ -1,14 +1,16 @@
-﻿using BookLibraryAPI.Data;
+﻿using Asp.Versioning;
+using BookLibraryAPI.Data;
 using BookLibraryAPI.Models;
 using BookLibraryAPI.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
-namespace BookLibraryAPI.Controllers
+namespace BookLibraryAPI.Controllers.V2
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion(2.0, Deprecated = true)]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class BooksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -18,14 +20,28 @@ namespace BookLibraryAPI.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Retrieves a list of all books.
+        /// </summary>
+        /// <returns>A list of books.</returns>
         [HttpGet]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBooks()
         {
             var books = await _context.Books.ToListAsync();
             return Ok(books);
         }
 
+        /// <summary>
+        /// Retrieves a specific book by unique id.
+        /// </summary>
+        /// <param name="id">The id of the book.</param>
+        /// <returns>A book.</returns>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBook(int id)
         {
             var book = await _context.Books.FindAsync(id);
@@ -36,7 +52,14 @@ namespace BookLibraryAPI.Controllers
             return Ok(book);
         }
 
+        /// <summary>
+        /// Searches for books based on given parameters.
+        /// </summary>
+        /// <param name="parameters">The search parameters.</param>
+        /// <returns>A list of books that match the search criteria.</returns>
         [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SearchBooks([FromQuery] SearchBooksParameters parameters)
         {
             var query = _context.Books.AsQueryable();
@@ -64,6 +87,12 @@ namespace BookLibraryAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Applies filters to the books query.
+        /// </summary>
+        /// <param name="query">The books query.</param>
+        /// <param name="parameters">The search parameters.</param>
+        /// <returns>The filtered query.</returns>
         private IQueryable<Book> ApplyFilters(IQueryable<Book> query, SearchBooksParameters parameters)
         {
             if (!string.IsNullOrEmpty(parameters.Title))
@@ -110,7 +139,14 @@ namespace BookLibraryAPI.Controllers
             return query;
         }
 
+        /// <summary>
+        /// Creates a new book.
+        /// </summary>
+        /// <param name="book">The book to create.</param>
+        /// <returns>The created book.</returns>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateBook(Book book)
         {
             _context.Books.Add(book);
@@ -118,7 +154,16 @@ namespace BookLibraryAPI.Controllers
             return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
         }
 
+        /// <summary>
+        /// Updates an existing book.
+        /// </summary>
+        /// <param name="id">The id of the book to update.</param>
+        /// <param name="updatedBook">The updated book.</param>
+        /// <returns>No content.</returns>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateBook(int id, Book updatedBook)
         {
             var book = await _context.Books.FindAsync(id);
@@ -135,7 +180,14 @@ namespace BookLibraryAPI.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes a book.
+        /// </summary>
+        /// <param name="id">The id of the book to delete.</param>
+        /// <returns>No content.</returns>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteBook(int id)
         {
             var book = await _context.Books.FindAsync(id);
