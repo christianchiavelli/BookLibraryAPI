@@ -14,8 +14,6 @@ namespace BookLibraryAPI.Controllers.V1
     [Route("api/v{version:apiVersion}/[controller]")]
     public class BooksController(ApplicationDbContext context) : ControllerBase
     {
-        private readonly ApplicationDbContext _context = context;
-
         [HttpGet("protected")]
         [Authorize]
         public IActionResult GetProtected()
@@ -30,7 +28,7 @@ namespace BookLibraryAPI.Controllers.V1
         [HttpGet]
         public async Task<IActionResult> GetBooks()
         {
-            var books = await _context.Books.ToListAsync();
+            var books = await context.Books.ToListAsync();
             return Ok(books);
         }
 
@@ -44,7 +42,7 @@ namespace BookLibraryAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBook(int id)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await context.Books.FindAsync(id);
             if (book == null)
             {
                 return NotFound();
@@ -62,7 +60,7 @@ namespace BookLibraryAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SearchBooks([FromQuery] SearchBooksParameters parameters)
         {
-            var query = _context.Books.AsQueryable();
+            var query = context.Books.AsQueryable();
 
             query = ApplyFilters(query, parameters);
 
@@ -149,8 +147,8 @@ namespace BookLibraryAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateBook(Book book)
         {
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
         }
 
@@ -166,7 +164,7 @@ namespace BookLibraryAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateBook(int id, Book updatedBook)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await context.Books.FindAsync(id);
             if (book == null)
             {
                 return NotFound();
@@ -176,7 +174,7 @@ namespace BookLibraryAPI.Controllers.V1
             book.Author = updatedBook.Author;
             book.Genre = updatedBook.Genre;
             book.IsBorrowed = updatedBook.IsBorrowed;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             return NoContent();
         }
 
@@ -190,13 +188,13 @@ namespace BookLibraryAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await context.Books.FindAsync(id);
             if (book == null)
             {
                 return NotFound();
             }
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
+            context.Books.Remove(book);
+            await context.SaveChangesAsync();
             return NoContent();
         }
     }

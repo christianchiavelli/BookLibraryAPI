@@ -10,15 +10,8 @@ namespace BookLibraryAPI.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController(IConfiguration configuration) : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-
-        public AuthController(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
         /// <summary>
         /// Authenticates a user and returns a JWT token if successful.
         /// </summary>
@@ -51,7 +44,10 @@ namespace BookLibraryAPI.Controllers
         private string GenerateJwtToken(string username)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
+            var issuer = configuration["Jwt:Issuer"];
+            var audience = configuration["Jwt:Audience"];
+            var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!);
+            var currentDate = DateTime.UtcNow;
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -60,12 +56,14 @@ namespace BookLibraryAPI.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = issuer,
+                Audience = audience,
+                Expires = currentDate.AddHours(1),
+                NotBefore = currentDate,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
-            Console.WriteLine($"Generated Token: {tokenString}");
             return tokenString;
         }
 
