@@ -51,7 +51,12 @@ This project is designed to manage a book library, allowing users to perform CRU
 
 ## Usage
 
-To test the API, navigate to `https://localhost:44335/swagger/index.html` to access the Swagger UI.
+To test the API, navigate to the appropriate URL for your environment:
+
+- Development: `https://localhost:7013/swagger/index.html`
+- Staging: `https://localhost:7023/swagger/index.html`
+- Production: `https://localhost:7033/swagger/index.html`
+- IIS Express: `https://localhost:44335/swagger/index.html`
 
 ## Roadmap
 
