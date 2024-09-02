@@ -4,7 +4,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text.Json;
 
-namespace BookLibraryAPI.Swagger
+namespace BookLibraryAPI.Extensions.Swagger
 {
     public class SwaggerDefaultValues : IOperationFilter
     {
